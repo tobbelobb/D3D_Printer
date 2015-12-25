@@ -6,8 +6,13 @@ module Nema17_screw_translate(){
   }
 }
 
-module Nema17_screw_holes(d, h){
-  Nema17_screw_translate() cylinder(r=d/2, h=h);
+module Nema17_screw_holes(r, h){
+  Nema17_screw_translate() cylinder(r=r, h=h);
+}
+//Nema17_screw_holes(M3_diameter/2, 15);
+
+module Nema17_screw_holes_2d(r=1.5){
+  Nema17_screw_translate() circle(r=r);
 }
 //Nema17_screw_holes(M3_diameter, 15);
 
@@ -29,13 +34,13 @@ module Nema17(){
       for (i=[0:90:359]){ // Corner cuts silver cube
         rotate([0,0,i+45]) translate([53.36/2,-cw/2,-1]) cube([cw,cw,ch+2]);
       }
-      translate([0,0,ch-5]) Nema17_screw_holes(M3_diameter, h=10);
-      translate([0,0,-5]) Nema17_screw_holes(M3_diameter, h=10);
+      translate([0,0,ch-5]) Nema17_screw_holes(M3_diameter/2, h=10);
+      translate([0,0,-5]) Nema17_screw_holes(M3_diameter/2, h=10);
       translate([-cw,-cw,9]) cube([2*cw,2*cw,ch-18]);
     }
     color("silver")
     difference(){
-      cylinder(r=Nema17_ring_diameter/2, h=ch+Nema17_ring_height);
+      cylinder(r=Nema17_ring_radius, h=ch+Nema17_ring_height);
       translate([0,0,1]) cylinder(r=8.76/2, h=ch+Nema17_ring_height);
     }
     color("silver")
