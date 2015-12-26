@@ -1,8 +1,21 @@
 include <Measured_numbers.scad>
 
+module M3_screw(h, updown=false){
+  color("grey"){
+    cylinder(r=M3_diameter/2, h=h);
+    if(updown){
+      translate([0,0,h-M3_head_height])
+        cylinder(r=M3_head_diameter/2, h=M3_head_height, $fn=6);
+    }else{
+      cylinder(r=M3_head_diameter/2, h=M3_head_height, $fn=6);
+    }
+  }
+}
+//M3_screw(10);
+
 module Nema17_screw_translate(){
   for (i=[0:90:359]){
-    rotate([0,0,i+45]) translate([Nema17_screw_hole_width/2,0,0]) children(0);
+    rotate([0,0,i+45]) translate([Nema17_screw_hole_width/2,0,0]) children();
   }
 }
 
@@ -47,4 +60,14 @@ module Nema17(){
       cylinder(r=5/2, h=sh);
   }
 }
-Nema17();
+//Nema17();
+
+module Bearing_608(){
+  color("blue")
+  difference(){
+    cylinder(r=Bearing_608_outer_diameter/2, h=Bearing_608_width);
+    translate([0,0,-1])
+      cylinder(r=Bearing_608_bore_diameter/2, h=Bearing_608_width+2);
+  }
+}
+//Bearing_608();
