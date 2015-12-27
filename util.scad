@@ -71,3 +71,10 @@ module Bearing_608(){
   }
 }
 //Bearing_608();
+
+// Used for rendering a shadow of printers outer dimensions
+module meas_cube(){
+  translate([-Cube_X_length/2,0,0])
+  %cube([Cube_X_length, Cube_Y_length, Cube_Z_length]);
+}
+//meas_cube();
