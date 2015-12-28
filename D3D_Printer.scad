@@ -86,6 +86,51 @@ module l_plate_2d(s = [L_module_width,Nema17_cube_width],
 }
 //l_plate_2d();
 
+// Screw holes along l_plates with matching holes in frame sides
+l_holes_2d_positions = [[ 0,0],
+                        [ Nema17_screw_hole_width/2,0],
+                        [-Nema17_screw_hole_width/2,0],
+                        [ Nema17_screw_hole_width  ,0],
+                        [-Nema17_screw_hole_width  ,0]];
+
+module l_plate_2d_hole_translate(){
+  for(k=l_holes_2d_positions)
+  translate(k)
+    children();
+}
+//l_plate_2d_hole_translate() circle(r=1.5);
+
+module l_plate_holes(){
+  big = 100;
+  k = l_holes_2d_positions;
+  rotate([-90,0,0]){
+    // Center M3 hole, outer edge
+    translate(concat(k[0],[-Nema17_cube_width/2-0.1]))
+      scale(1.02)
+      M3_screw(big);
+    // Center M3 hole, bearing edge
+    translate(concat(k[0],[Bearing_608_outer_radius-0.7]))
+      scale(1.02)
+      M3_screw(big);
+    // Right center M3 hole
+    translate(concat(k[1],[-Nema17_cube_width/2-0.1]))
+      scale(1.02)
+      M3_screw(big);
+    // Left center M3 hole
+    translate(concat(k[2],[-Nema17_cube_width/2-0.1]))
+      scale(1.02)
+      M3_screw(big);
+    // Right M3 hole
+    translate(concat(k[3],[-9]))
+      scale(1.02)
+      M3_screw(big, head_height=10);
+    // Left M3 hole
+    translate(concat(k[4],[-9]))
+      scale(1.02)
+      M3_screw(big, head_height=10);
+  }
+}
+//l_plate_holes();
 
 // Plates attached to stepper motors
 // s: XY size of plate (vector or scalar)
@@ -101,30 +146,7 @@ module l_plate(s = [L_module_width,Nema17_cube_width],
     linear_extrude(height=Plastic_thickness)
       l_plate_2d(s, smooth_rod_separation);
     translate([0,0,Plastic_thickness/2])
-      rotate([-90,0,0]){
-        translate([0,0,-Nema17_cube_width/2-0.1])
-          scale(1.02)
-          M3_screw(big); // Center M3 hole, outer edge
-        translate([0,0,Bearing_608_outer_radius-0.7])
-          scale(1.02)
-          M3_screw(big); // Center M3 hole, bearing edge
-        translate([Nema17_screw_hole_width/2,0,
-                  -Nema17_cube_width/2-0.1])
-          scale(1.02)
-          M3_screw(big); // Right center M3 hole
-        translate([-Nema17_screw_hole_width/2,0,
-                  -Nema17_cube_width/2-0.1])
-          scale(1.02)
-          M3_screw(big); // Left center M3 hole
-        translate([Nema17_screw_hole_width,0,
-                  -9])
-          scale(1.02)
-          M3_screw(big, head_height=10); // Right M3 hole
-        translate([-Nema17_screw_hole_width,0,
-                  -9])
-          scale(1.02)
-          M3_screw(big, head_height=10); // Left M3 hole
-      }
+      l_plate_holes();
   }
   // Clamps for smooth rods
   for(k=[0,1])
@@ -153,7 +175,7 @@ module l_plate(s = [L_module_width,Nema17_cube_width],
 // show_motor: if true, render motor
 // show_rods: if true, render rods
 module l_module(s = [L_module_width,Nema17_cube_width],
-                h = Nema17_with_leadscrew_height,
+                h = L_module_length,
                 smooth_rod_separation=L_module_smooth_rod_separation){
   for(k=[0,Nema17_cube_height+Plastic_thickness])
     translate([0,0,k])
@@ -220,70 +242,10 @@ translate([sx-Nema17_cube_width/2-x_clr, sy-Nema17_cube_width/2-y_clr])
     // Top left
 translate([   Nema17_cube_width/2+x_clr, sy-Nema17_cube_width/2-y_clr])
       Nema17_screw_holes_2d();
+  l_plate_2d_hole_translate() circle(r=1.5);
 }
 //Sideplate_holes_2d(Cube_X_length, Cube_Z_length,
 //                   Steel_thickness, Steel_thickness);
-
-// The X-shaped steel plate paralell with Y-direction.
-// Note that corner is in origo in this module.
-// In finished printer it will be translated.
-// All parameters found in Design_numbers.scad
-module X_side_2d(){
-  s = Cube_Y_length-2*Steel_thickness;
-  ang = atan(Cube_Z_length/Cube_Y_length);// Between cross and XY plane
-  x_offs = Cross_width/(2*sin(ang));
-  y_offs = Cross_width/(2*cos(ang));
-  difference(){
-    // The steel cross. Points declared in counterclockwise order
-    polygon([[0,0], // Origo
-             [x_offs, 0],
-             [s/2, Cube_Z_length/2-y_offs],
-             [s-x_offs, 0],
-             [s, 0], // Bottom right corner
-             [s, y_offs],
-             [s/2+x_offs, Cube_Z_length/2],
-             [s, Cube_Z_length-y_offs],
-             [s, Cube_Z_length], // Top right corner
-             [s-x_offs, Cube_Z_length],
-             [s/2, Cube_Z_length/2+y_offs],
-             [x_offs, Cube_Z_length],
-             [0,Cube_Z_length], // Top left corner
-             [0,Cube_Z_length-y_offs],
-             [s/2-x_offs, Cube_Z_length/2],
-             [0, y_offs]]);
-    // Corner screw holes
-    // Note that all holes are translated Steel_thickness away from
-    // outermost edges to allow symmetrical corner fastener pieces
-    Sideplate_holes_2d(s, Cube_Z_length, 0, Steel_thickness);
-  }
-}
-//X_side_2d();
-
-module X_side(){
-  color("lightGrey")
-  linear_extrude(height=Steel_thickness)
-    X_side_2d();
-}
-//X_side();
-
-module Y_side_2d(){
-  difference(){
-    square([Cube_X_length, Cube_Z_length]);
-    // Corner screw holes
-    // Note that all holes are translated Steel_thickness away from
-    // outermost edges to allow symmetrical corner fastener pieces
-    Sideplate_holes_2d(Cube_X_length, Cube_Z_length,
-                       Steel_thickness, Steel_thickness);
-  }
-}
-//Y_side_2d();
-
-module Y_side(){
-  color("lightGrey")
-  linear_extrude(height=Steel_thickness)
-    Y_side_2d();
-}
-//Y_side();
 
 // Holes for corner pieces in X- and Y-plates
 // sx: The X-size of plate in question
@@ -295,53 +257,26 @@ module Sideplate_holes2_2d(sx, sy, x_clr, y_clr){
 //Sideplate_holes2_2d(Cube_X_length, Cube_Z_length,
 //                   Steel_thickness, Steel_thickness);
 
-
-module X_side2_2d(){
-  w = 2*Plastic_thickness + Nema17_cube_height;
-  s = Cube_Y_length-2*Steel_thickness;
+module Frame_plate_2d(){
   difference(){
-    square([s, Cube_Z_length]);
-    translate([w, w])
-     rounded_square([s-2*w, Cube_Z_length-2*w], 10);
+    square(Side_length);
+    translate([Frame_width, Frame_width])
+      rounded_square(Side_length-2*Frame_width, 10);
     // Corner screw holes
     // Note that all holes are translated Steel_thickness away from
     // outermost edges to allow symmetrical corner fastener pieces
-    Sideplate_holes2_2d(s, Cube_Z_length,
-                        0, Steel_thickness);
-  }
-}
-//X_side2_2d();
-
-module X_side2(){
-  color("lightGrey")
-  linear_extrude(height=Steel_thickness)
-    X_side2_2d();
-}
-//X_side2();
-
-
-module Y_side2_2d(){
-  w = 2*Plastic_thickness + Nema17_cube_height; // Width of steel band
-  difference(){
-    square([Cube_X_length, Cube_Z_length]);
-    translate([w, w])
-     rounded_square([Cube_X_length-2*w, Cube_Z_length-2*w], 10);
-    // Corner screw holes
-    // Note that all holes are translated Steel_thickness away from
-    // outermost edges to allow symmetrical corner fastener pieces
-    Sideplate_holes2_2d(Cube_X_length, Cube_Z_length,
+    Sideplate_holes2_2d(Side_length, Side_length,
                         Steel_thickness, Steel_thickness);
   }
 }
-//Y_side2_2d();
+//Frame_plate_2d();
 
-
-module Y_side2(){
+module Frame_plate(){
   color("DarkGrey")
   linear_extrude(height=Steel_thickness)
-    Y_side2_2d();
+    Frame_plate_2d();
 }
-//Y_side2();
+//Frame_plate();
 
 module assembled_printer(){
   // The frame
@@ -349,10 +284,10 @@ module assembled_printer(){
     if(Show_Y_side){
       translate([-Cube_X_length/2,Steel_thickness,0])
         rotate([90,0,0])
-        Y_side2(); // Closest to origo
+        Frame_plate(); // Closest to origo
       translate([-Cube_X_length/2,Cube_Y_length,0])
         rotate([90,0,0])
-        Y_side2();
+        Frame_plate();
     }
     if(Show_X_side){
       for(k=[1,-1])
@@ -360,7 +295,7 @@ module assembled_printer(){
             Steel_thickness,0])
           rotate([90,0,90])
           translate([0,0,-Steel_thickness/2])
-          X_side2();
+          Frame_plate();
     }
   }
 
@@ -378,8 +313,8 @@ module assembled_printer(){
 
   // Z module
   translate([0,Nema17_cube_width/2+Steel_thickness,
-             Smooth_rod_length])
+             L_module_length])
   rotate([180,0,0])
     l_module();
 }
-assembled_printer();
+//assembled_printer();

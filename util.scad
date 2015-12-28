@@ -90,17 +90,27 @@ module meas_cube(){
 }
 //meas_cube();
 
+// Works with both vector[2] and scalar type of s
 module rounded_square(s, r){
-  translate([r,r])
-    circle(r);
-  translate([s[0]-r,r])
-    circle(r);
-  translate([s[0]-r,s[1]-r])
-    circle(r);
-  translate([r,s[1]-r])
-    circle(r);
-  translate([r,0])
-    square([s[0]-2*r, s[1]]);
-  translate([0,r])
-    square([s[0], s[1]-2*r]);
+  if(len(s) == undef){
+    // The circles
+    for(k = [[r,r],[s-r,r],[s-r,s-r],[r,s-r]])
+      translate(k)
+      circle(r);
+    // The squares
+    translate([r,0])
+      square([s-2*r, s]);
+    translate([0,r])
+      square([s, s-2*r]);
+  }else if(len(s) ==2){
+    // The circles
+    for(k = [[r,r],[s[0]-r,r],[s[0]-r,s[1]-r],[r,s[1]-r]])
+      translate(k)
+      circle(r);
+    // The squares
+    translate([r,0])
+      square([s[0]-2*r, s[1]]);
+    translate([0,r])
+      square([s[0], s[1]-2*r]);
+  }
 }
