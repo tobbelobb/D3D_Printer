@@ -16,6 +16,7 @@ Nema17_motor_shaft         = 5;
 M3_diameter                = 3;
 M3_radius                  = 1.5;
 M3_head_diameter           = 6.3;
+M3_wrench_size             = 5.5;
 M3_head_height             = 2.5;
 
 Bearing_608_width          = 7;

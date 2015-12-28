@@ -1,13 +1,24 @@
 include <Measured_numbers.scad>
 
-module M3_screw(h, updown=false){
-  color("grey"){
-    cylinder(r=M3_diameter/2, h=h);
-    if(updown){
-      translate([0,0,h-M3_head_height])
-        cylinder(r=M3_head_diameter/2, h=M3_head_height, $fn=6);
-    }else{
-      cylinder(r=M3_head_diameter/2, h=M3_head_height, $fn=6);
+// Threadless M3 screw with hex head
+// h: height (length) of the screw
+// head_height: for custom head heights. Doesn't affect overall height
+// updown: put head at other end
+// center: translate cylinder so that mass centrum is in origo
+module M3_screw(h, head_height=M3_head_height,
+                updown=false, center=false,){
+  if(center){
+    translate([0,0,-h/2])
+      M3_screw(h, head_height, updown, center);
+  }else{
+    color("grey"){
+      cylinder(r=M3_diameter/2, h=h);
+      if(updown){
+        translate([0,0,h-head_height])
+          cylinder(r=M3_head_diameter/2, h=head_height, $fn=6);
+      }else{
+        cylinder(r=M3_head_diameter/2, h=head_height, $fn=6);
+      }
     }
   }
 }
@@ -78,3 +89,18 @@ module meas_cube(){
   %cube([Cube_X_length, Cube_Y_length, Cube_Z_length]);
 }
 //meas_cube();
+
+module rounded_square(s, r){
+  translate([r,r])
+    circle(r);
+  translate([s[0]-r,r])
+    circle(r);
+  translate([s[0]-r,s[1]-r])
+    circle(r);
+  translate([r,s[1]-r])
+    circle(r);
+  translate([r,0])
+    square([s[0]-2*r, s[1]]);
+  translate([0,r])
+    square([s[0], s[1]-2*r]);
+}
