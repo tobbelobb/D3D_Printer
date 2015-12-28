@@ -2,7 +2,16 @@
 Steel_thickness   = 3;
 Smooth_rod_r      = 5; // 10 mm diameter
 Smooth_rod_length = 300;
+// We want
+// Nema17_cube_height + Plastic_thickness = Nema17_screw_hole_dist
+// But we also want
+// Plastic_thickness >= M3_wrench_size
+// So Nema17_cube_height >= M3_wrench_size + Nema17_screw_hole_dist 
+//Plastic_thickness = Nema17_screw_hole_dist - Nema17_cube_height;
 Plastic_thickness = M3_wrench_size;
+//echo(Nema17_cube_height);
+//echo(M3_wrench_size + Nema17_screw_hole_dist);
+
 Clamp_height      = 15;
 
 L_module_length   = Nema17_with_leadscrew_height + Plastic_thickness;
@@ -24,6 +33,6 @@ Frame_width       = max(2*Plastic_thickness + Nema17_cube_height,
 
 //L_module_width    = Nema17_cube_width+4*(Smooth_rod_r+4);
 L_module_width    = 3*Nema17_cube_width;
-L_module_smooth_rod_separation = Nema17_cube_width+2*(Smooth_rod_r+3);
+L_module_smooth_rod_separation = Nema17_cube_width+2*(Smooth_rod_r+3.5);
 
 L_plate_height = Nema17_cube_height + Plastic_thickness;
