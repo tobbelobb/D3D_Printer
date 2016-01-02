@@ -51,10 +51,12 @@ module leadscrew(r, lead_of_thread, h){
 //leadscrew(Leadscrew_r, 8, 300);
 
 // Square flat piece clamping bearing down
-module bearing_608_clamp_2d(){
+module bearing_608_clamp_2d(r = Bearing_608_outer_radius-3){
   difference(){
     square(Nema17_cube_width, center=true);
-    circle(r=Bearing_608_outer_radius-3);
+    circle(r=r);
+    translate([-r,0])
+      square([2*r, Nema17_cube_width]);
     Nema17_screw_holes_2d();
   }
 }
@@ -65,6 +67,7 @@ module bearing_608_clamp(){
   linear_extrude(height=Plastic_thickness)
     bearing_608_clamp_2d();
 }
+//bearing_608_clamp();
 
 // 2D drawing of plates attached to stepper motors
 // s: XY size of plate (vector or scalar)
@@ -178,7 +181,7 @@ module l_plate(s = [L_module_width,Nema17_cube_width],
   difference(){
     linear_extrude(height=Plastic_thickness + Clamp_height)
       difference(){
-        l_plate_2d(s, smooth_rod_separation);  
+        l_plate_2d(s, smooth_rod_separation);
         translate([-big/2,-big+Nema17_cube_width/2-Plastic_thickness])
           square(big);
       }
