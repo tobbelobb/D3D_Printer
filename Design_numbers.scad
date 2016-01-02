@@ -6,7 +6,7 @@ Smooth_rod_length = 300;
 // Nema17_cube_height + Plastic_thickness = Nema17_screw_hole_dist
 // But we also want
 // Plastic_thickness >= M3_wrench_size
-// So Nema17_cube_height >= M3_wrench_size + Nema17_screw_hole_dist 
+// So Nema17_cube_height >= M3_wrench_size + Nema17_screw_hole_dist
 //Plastic_thickness = Nema17_screw_hole_dist - Nema17_cube_height;
 Plastic_thickness = M3_wrench_size;
 //echo(Nema17_cube_height);
@@ -30,6 +30,10 @@ Cube_Z_length     = Side_length;
 // This width keeps l_modules behind frame sides.
 Frame_width       = max(2*Plastic_thickness + Nema17_cube_height,
                         Nema17_cube_width + Steel_thickness);
+
+echo("Steel sheet frame weight (kg):");
+Frame_weight = (4*Frame_width*(Side_length - Frame_width) * Steel_thickness * 4)*0.000008;
+echo(Frame_weight);
 
 //L_module_width    = Nema17_cube_width+4*(Smooth_rod_r+4);
 L_module_width    = 3*Nema17_cube_width;
