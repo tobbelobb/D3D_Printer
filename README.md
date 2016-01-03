@@ -1,8 +1,8 @@
 # D3D_Printer
-The 3D printer design for the (D3D Fusion Project)[http://opensourceecology.org/wiki/D3D_Fusion]. Rationale for design decisions are found (here)[http://opensourceecology.org/wiki/D3D_Fusion_printer_design].
+The 3D printer design for the [D3D Fusion Project](http://opensourceecology.org/wiki/D3D_Fusion). Rationale for design decisions are found [here](http://opensourceecology.org/wiki/D3D_Fusion_printer_design).
 
 ## Build
-Use OpenSCAD version 2015.03 or later. See (OpenSCAD web page)[www.openscad.org/downloads.html] for instructions. Open up `Footer.scad`, and explore by uncommenting modules.
+Use OpenSCAD version 2015.03 or later. See [OpenSCAD web page](www.openscad.org/downloads.html) for instructions. Open up `Footer.scad`, and explore by uncommenting modules.
 
 ## Code style and structure
 ### Use good names
