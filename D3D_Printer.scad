@@ -6,14 +6,22 @@ use <util.scad>
 // Default argument values are meant as default values
 // Explicitly giving modules arguments are only for experimentation
 
+// This translating module defines the interface between printed parts and smooth rods
+// (in a plane perpendicular to smooth rods themselves)
+// Note that symmetry is enforced by mirroring the translated children
+module smooth_rod_split(separation = Smooth_rod_separation){
+  for(k=[0,1])
+    mirror([k,0])
+    translate([separation/2,0,0])
+    children();
+}
+
 // 2D drawing of smooth rods in the XY plane, centered
 // s: Distance between centers
 // r: radius of rods
 module smooth_rods_2d(s, r){
-  for(k=[0,1])
-    mirror([k,0])
-      translate([s/2,0])
-      circle(r=r);
+  smooth_rod_split(s)
+    circle(r=r);
 }
 //smooth_rods_2d(20,3);
 
@@ -21,7 +29,9 @@ module smooth_rods_2d(s, r){
 // smooth_rod_separation: Between smooth rod centers
 // r: radius of rods
 // h: length of rods
-module smooth_rods(smooth_rod_separation, h, r){
+module smooth_rods(smooth_rod_separation = Smooth_rod_separation,
+                   h = L_module_length,
+                   r = Smooth_rod_r){
   color("silver")
     linear_extrude(height=h, slices=1)
     smooth_rods_2d(smooth_rod_separation, r);
@@ -30,25 +40,62 @@ module smooth_rods(smooth_rod_separation, h, r){
 
 // 2d profile of a four threaded leadscrew (square threads)
 // r: Radius of threads along X and Y axes
-module leadscrew_2d(r){
+module leadscrew_2d(r, number_of_starts){
   circle(r=r-1);
-  square([2,2*r],center=true);
-  rotate(90)
-    square([2,2*r],center=true);
+  for(i=[0:360/number_of_starts:359])
+    rotate([0,0,i])
+      translate([-1,0,0])
+      square([2,r]);
 }
-//leadscrew_2d(4);
+//leadscrew_2d(4, 4);
 
 // Four threaded leadscrew (square threads) without nut
 // r: Radius of threads along X and Y axes
 // lead_of_thread: length of linear travel per revolution
 // h: height of leadscrew
-module leadscrew(r, lead_of_thread, h){
+module leadscrew(r                = Leadscrew_r,
+                 lead_of_thread   = Leadscrew_lead_of_thread,
+                 h                = Nema17_with_leadscrew_height,
+                 number_of_starts = Leadscrew_number_of_starts){
   revs = h/lead_of_thread;
   color("LightSlateGrey")
   linear_extrude(height=h, twist=-revs*360)
-    leadscrew_2d(r=r);
+    leadscrew_2d(r, number_of_starts);
 }
-//leadscrew(Leadscrew_r, 8, 300);
+//leadscrew();
+
+// Helper translating module to easier match screw holes in flange and moving bit
+// Defines flange planar interface
+module flange_hole_translate(){
+  for(i=[0:360/4:359])
+    rotate([0,0,i])
+      translate([Leadscrew_flanged_nut_screw_hole_width/2,0,-1])
+      children();
+}
+
+// The nut running up and down leadscrew
+// Parameters are found in Measured_numbers.scad
+module leadscrew_flange_nut(total_height = Flanged_nut_height){
+  color("goldenrod")
+  difference(){
+    union(){
+      // Center cylinder
+      cylinder(r = Flanged_nut_small_r, h = total_height);
+      // Flange
+      translate([0,0,Flange_offset])
+        cylinder(r = Flanged_nut_big_r, h = Flange_thickness);
+    }
+    // screw holes
+    flange_hole_translate()
+      cylinder(r = 3.75/2, h = total_height+2);
+    // Only dig out tracks if leadscrew itself is not shown
+    if(!Show_leadscrew){
+      translate([0,0,-1])
+        leadscrew();
+    }
+  }
+}
+//leadscrew_flange_nut();
 
 // Square flat piece clamping bearing down
 module bearing_608_clamp_2d(r = Bearing_608_outer_radius-3){
@@ -73,7 +120,7 @@ module bearing_608_clamp(){
 // s: XY size of plate (vector or scalar)
 // smooth_rod_separation: Between smooth rod centers
 module l_plate_2d(s = [L_module_width,Nema17_cube_width],
-                 smooth_rod_separation=L_module_smooth_rod_separation){
+                 smooth_rod_separation=Smooth_rod_separation){
   difference(){
     //square(s, center=true);
     polygon([[-smooth_rod_separation/2,-s[1]/2],
@@ -91,40 +138,21 @@ module l_plate_2d(s = [L_module_width,Nema17_cube_width],
 //l_plate_2d();
 
 // Screw holes along l_plates with matching holes in frame sides
-l_holes_2d_positions = [//[ 0,0],
-                        //[1*( Nema17_screw_hole_dist)/4,0],
-                        //[1*(-Nema17_screw_hole_dist)/4,0],
-                        [2*( Nema17_screw_hole_dist)/4,0],
+// Defines the interface to frame sides
+l_holes_2d_positions = [[2*( Nema17_screw_hole_dist)/4,0],
                         [2*(-Nema17_screw_hole_dist)/4,0],
-                        //[3*( Nema17_screw_hole_dist)/4,0],
-                        //[3*(-Nema17_screw_hole_dist)/4,0],
-                        //[4*( Nema17_screw_hole_dist)/4,0],
-                        //[4*(-Nema17_screw_hole_dist)/4,0],
-                        //[5*( Nema17_screw_hole_dist)/4,0],
-                        //[5*(-Nema17_screw_hole_dist)/4,0],
                         [6*( Nema17_screw_hole_dist)/4,0],
                         [6*(-Nema17_screw_hole_dist)/4,0],
-                        //[7*( Nema17_screw_hole_dist)/4,0],
-                        //[7*(-Nema17_screw_hole_dist)/4,0],
-                        //[8*( Nema17_screw_hole_dist)/4,0],
-                        //[8*(-Nema17_screw_hole_dist)/4,0],
-                        //[9*( Nema17_screw_hole_dist)/4,0],
-                        //[9*(-Nema17_screw_hole_dist)/4,0],
                         [10*( Nema17_screw_hole_dist)/4,0],
                         [10*(-Nema17_screw_hole_dist)/4,0],
-                        //[11*( Nema17_screw_hole_dist)/4,0],
-                        //[11*(-Nema17_screw_hole_dist)/4,0],
-                        //[12*( Nema17_screw_hole_dist)/4,0],
-                        //[12*(-Nema17_screw_hole_dist)/4,0],
-                        //[13*( Nema17_screw_hole_dist)/4,0],
-                        //[13*(-Nema17_screw_hole_dist)/4,0],
                         [14*( Nema17_screw_hole_dist)/4,0],
                         [14*(-Nema17_screw_hole_dist)/4,0],
-                        ];
+                        [18*( Nema17_screw_hole_dist)/4,0],
+                        [18*(-Nema17_screw_hole_dist)/4,0]];
 
 module l_plate_2d_hole_translate(){
   for(k=l_holes_2d_positions)
-  translate(k)
+    translate(k)
     children();
 }
 //l_plate_2d_hole_translate() circle(r=1.5);
@@ -134,19 +162,18 @@ module l_plate_holes(){
   k = l_holes_2d_positions;
   rotate([-90,0,0]){
     // Right M3 hole
-    translate([1.5*Nema17_screw_hole_dist,0,
-              Nema17_cube_width/2 - Plastic_thickness-0.5])
+    translate(concat(k[2], // concat() requires OpenSCAD version 2015.03 or later
+              Nema17_cube_width/2 - Plastic_thickness-0.5))
       scale(1.02)
       M3_screw(big);
     // Left M3 hole
-    translate([-1.5*Nema17_screw_hole_dist,0,
-              Nema17_cube_width/2 - Plastic_thickness-0.5])
+    translate(concat(k[3],
+              Nema17_cube_width/2 - Plastic_thickness-0.5))
       scale(1.02)
       M3_screw(big);
   }
 }
 //l_plate_holes();
-
 
 // On the frame pieces, one hole string is this distance from edge
 //   Steel_thickness
@@ -164,10 +191,10 @@ module l_plate_holes(){
 // smooth_rod_separation: Between smooth rod centers
 module l_plate(s = [L_module_width,Nema17_cube_width],
                h = Clamp_height,
-               smooth_rod_separation=L_module_smooth_rod_separation){
+               smooth_rod_separation=Smooth_rod_separation){
   color("red"){
   big = 200;
-  // These values are strongly coupled to Side_plates
+  // These values are specialized to make l_modules match the interface of side plates
   l_holes_height0 = Steel_thickness
                     + (Nema17_cube_width - Nema17_screw_hole_dist)/2;
   l_holes_height1 = Frame_width
@@ -193,35 +220,101 @@ module l_plate(s = [L_module_width,Nema17_cube_width],
       cube([Nema17_cube_width+24,big,big]);
   }
   // Clamps for smooth rods
-  for(k=[0,1])
-    mirror([k,0])
-      translate([smooth_rod_separation/2,0,0])
-      difference(){
-        translate([0,0,1])
-          // Outer clamp cylinder
-          cylinder(r=Smooth_rod_r+1.5, h=Plastic_thickness+h-1);
-        translate([0,0,-1]){
-          // Inner clamp cylinder
-          cylinder(r=Smooth_rod_r, h=Plastic_thickness+h+3);
-          // Grooves to let clamp flex
+  // TODO: A slit in XY plate and a clamping screw could fill same function is it better?
+  //       Can we do it without bending the whole l_plate?
+  smooth_rod_split(smooth_rod_separation){
+    difference(){
+      translate([0,0,1])
+        // Outer clamp cylinder
+        cylinder(r=Smooth_rod_r+1.5, h=Plastic_thickness+h-1);
+      translate([0,0,-1]){
+        // Inner clamp cylinder
+        cylinder(r=Smooth_rod_r, h=Plastic_thickness+h+3);
+        // Grooves to let clamp flex
+        cube([2,big,big],center=true);
+        rotate([0,0,90])
           cube([2,big,big],center=true);
-          rotate([0,0,90])
-            cube([2,big,big],center=true);
-        }
       }
-}
+    } // end of difference
+  } // end of smooth_rod_split
+  }// end of color
 }
 //l_plate();
+
+// A custom linear bearing build out of three 623 rotational bearings
+module linear_bearing(w = Linear_bearing_width){
+  //color("red")
+  difference(){
+    cube(w, center=true);
+    translate([0,Plastic_thickness,0])
+      cube([w - 2*Plastic_thickness, w, w +2],
+           center=true);
+    for(i=[0,120,240])
+      rotate([0,0,i+0])
+      translate([0,Bearing_623_outer_radius + Smooth_rod_r,0])
+      rotate([0,90,0]){
+        scale(1.02)
+        #Bearing_623(center=true);
+        M3_screw(h=w+1, center=true);
+      }
+  }
+}
+//linear_bearing();
+
+// This is the moving part of the linear module
+// It interfaces with the leadscrew, flanged nut and smooth rods through interfaces:
+//   smooth_rod_split()
+//   flange_hole_translate()
+// And through variables:
+//   Flanged_nut_small_r
+//   Flanged_nut_big_r
+//   Flange_offset
+//   Flange_thickness
+// TODO: Finish this
+module m_module(){
+  big = 100;
+  w = Linear_bearing_width;
+  r_with_nut_clearance = Flanged_nut_small_r+1;
+  difference(){
+    //color("red")
+    // Bridge between linear bearings
+    translate([-(Smooth_rod_separation - w + 1)/2,-w/2,w/2-Plastic_thickness])
+      cube([Smooth_rod_separation - w + 2,w,Plastic_thickness]);
+    cylinder(r = r_with_nut_clearance, h = big);
+    flange_hole_translate()
+      M3_screw(h=big);
+    // Slit for removal of leadscrew nut
+    translate([-r_with_nut_clearance,0,0])
+      cube([2*r_with_nut_clearance, w, big]);
+  }
+  smooth_rod_split()
+    linear_bearing(w);
+  //**** Below here are render only parts ****//
+  if(Show_flanged_nut){
+    translate([0,0,w/2 + Flange_offset + Flange_thickness])
+      mirror([0,0,1])
+      leadscrew_flange_nut();
+  }
+  if(Show_screws){
+    difference(){
+    translate([0,0,w/2 + Flange_offset + Flange_thickness + 0.5]) // 0.5 avoid z-fight
+      mirror([0,0,1])
+      flange_hole_translate()
+      M3_screw(h=20);
+    translate([-r_with_nut_clearance,3,-1])
+      cube([2*r_with_nut_clearance, w, big]);
+    }
+  }
+}
+//m_module();
 
 // A linear actuator based on a leadscrew, a nut and a stepper motor
 // s: XY size of plate (vector or scalar)
 // h: full length of the module. Note! leadscrew_length < h
 // smooth_rod_separation: Between smooth rod centers
-// show_motor: if true, render motor
-// show_rods: if true, render rods
 module l_module(s = [L_module_width,Nema17_cube_width],
                 h = L_module_length,
-                smooth_rod_separation=L_module_smooth_rod_separation){
+                smooth_rod_separation=Smooth_rod_separation){
   // Plates under motor
   l_plate();
   // Plate over motor
@@ -249,9 +342,7 @@ module l_module(s = [L_module_width,Nema17_cube_width],
       Nema17();
       // Leadscrew
       if(Show_leadscrew){
-        leadscrew(Leadscrew_r,
-                  Leadscrew_lead_of_thread,
-                  h-Plastic_thickness);
+        leadscrew();
       }
     }
   }
@@ -268,11 +359,15 @@ module l_module(s = [L_module_width,Nema17_cube_width],
       M3_screw(25);
     }
   }
+  if(Show_m_module){
+    translate([0,0,Flanged_nut_pos])
+    m_module();
+  }
 }
 //l_module();
 
 // Screw holes for fastening motors and corners
-module Frame_holes_2d(){
+module frame_holes_2d(){
   translate([Side_length/2, Side_length/2])
   for(r = [0 : 90 : 359])
   rotate([0,0,r]){
@@ -286,37 +381,38 @@ module Frame_holes_2d(){
   }
 
 }
-//Frame_holes_2d();
+//frame_holes_2d();
 
-module Frame_plate_2d(){
+module frame_plate_2d(){
   difference(){
     square(Side_length);
     translate([Frame_width, Frame_width])
-      rounded_square(Side_length-2*Frame_width, 10);
+      Rounded_square(Side_length-2*Frame_width, 10);
     // Screw holes for fastening motors and corners
-    Frame_holes_2d(Side_length, Side_length,
+    frame_holes_2d(Side_length, Side_length,
                         Steel_thickness, Steel_thickness);
   }
 }
-//Frame_plate_2d();
+//frame_plate_2d();
 
-module Frame_plate(){
+module frame_plate(){
   color("lightSteelBlue")
   linear_extrude(height=Steel_thickness)
-    Frame_plate_2d();
+    frame_plate_2d();
 }
-//Frame_plate();
+//frame_plate();
 
+// The complete assembled printer.
 module assembled_printer(){
   // The frame
   if(Show_frame){
     if(Show_Y_side){
       translate([-Cube_X_length/2,Steel_thickness,0])
         rotate([90,0,0])
-        Frame_plate(); // Closest to origo
+        frame_plate(); // Closest to origo
       translate([-Cube_X_length/2,Cube_Y_length,0])
         rotate([90,0,0])
-        Frame_plate();
+        frame_plate();
     }
     if(Show_X_side){
       for(k=[1,-1])
@@ -324,19 +420,19 @@ module assembled_printer(){
             Steel_thickness,0])
           rotate([90,0,90])
           translate([0,0,-Steel_thickness/2])
-          Frame_plate();
+          frame_plate();
     }
   }
 
   // The Y axis modules
     translate([Cube_X_length/2-Nema17_cube_width/2-Steel_thickness,
         Steel_thickness,
-        Side_length/2 + 2*Nema17_screw_hole_dist])
+        Side_length/2 + 3*Nema17_screw_hole_dist])
       rotate([-90,-90,0])
       l_module();
     translate([-(Cube_X_length/2-Nema17_cube_width/2-Steel_thickness),
         Steel_thickness,
-        Side_length/2 + 2*Nema17_screw_hole_dist])
+        Side_length/2 + 3*Nema17_screw_hole_dist])
         //Cube_Z_length - 2*Nema17_screw_hole_dist])
       rotate([-90,90,0])
       l_module();
@@ -346,5 +442,12 @@ module assembled_printer(){
              L_module_length])
   rotate([180,0,0])
     l_module();
+
+  // X module
+  translate([-L_module_length/2,
+             Steel_thickness+Flanged_nut_pos,
+             Nema17_cube_width/2 + Cube_Z_length])
+  rotate([-90,0,-90])
+  l_module();
 }
 assembled_printer();

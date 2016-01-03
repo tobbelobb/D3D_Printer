@@ -6,12 +6,19 @@ include <Measured_numbers.scad>
 // updown: put head at other end
 // center: translate cylinder so that mass centrum is in origo
 module M3_screw(h, head_height=M3_head_height,
-                updown=false, center=false,){
+                updown=false, center=false){
+  color("grey"){
   if(center){
     translate([0,0,-h/2])
-      M3_screw(h, head_height, updown, center);
+      cylinder(r=M3_diameter/2, h=h);
+      if(updown){
+        translate([0,0,h/2-head_height])
+          cylinder(r=M3_head_diameter/2, h=head_height, $fn=6);
+      }else{
+        translate([0,0,-h/2])
+        cylinder(r=M3_head_diameter/2, h=head_height, $fn=6);
+      }
   }else{
-    color("grey"){
       cylinder(r=M3_diameter/2, h=h);
       if(updown){
         translate([0,0,h-head_height])
@@ -20,9 +27,9 @@ module M3_screw(h, head_height=M3_head_height,
         cylinder(r=M3_head_diameter/2, h=head_height, $fn=6);
       }
     }
-  }
+  }// end of color
 }
-//M3_screw(10);
+//M3_screw(10, center=true, updown=true);
 
 module Nema17_screw_translate(){
   for (i=[0:90:359]){
@@ -73,25 +80,34 @@ module Nema17(){
 }
 //Nema17();
 
-module Bearing_608(){
+module Bearing(outer_r, inner_r, h, center=false){
   color("blue")
   difference(){
-    cylinder(r=Bearing_608_outer_diameter/2, h=Bearing_608_width);
-    translate([0,0,-1])
-      cylinder(r=Bearing_608_bore_diameter/2, h=Bearing_608_width+2);
+    cylinder(r=outer_r, h=h, center=center);
+    translate([0,0,-3])
+      cylinder(r=inner_r, h=h+6, center=center);
   }
+}
+
+module Bearing_608(center=false){
+  Bearing(Bearing_608_outer_radius, Bearing_608_bore_radius, Bearing_608_width, center=center);
 }
 //Bearing_608();
 
+module Bearing_623(center=false){
+  Bearing(Bearing_623_outer_radius, Bearing_623_bore_radius, Bearing_623_width, center=center);
+}
+//Bearing_623();
+
 // Used for rendering a shadow of printers outer dimensions
-module meas_cube(){
+module Meas_cube(){
   translate([-Cube_X_length/2,0,0])
   %cube([Cube_X_length, Cube_Y_length, Cube_Z_length]);
 }
-//meas_cube();
+//Meas_cube();
 
 // Works with both vector[2] and scalar type of s
-module rounded_square(s, r){
+module Rounded_square(s, r){
   if(len(s) == undef){
     // The circles
     for(k = [[r,r],[s-r,r],[s-r,s-r],[r,s-r]])
