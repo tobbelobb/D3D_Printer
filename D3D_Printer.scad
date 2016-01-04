@@ -245,21 +245,125 @@ module l_plate(s = [L_module_width,Nema17_cube_width],
 module linear_bearing(w = Linear_bearing_width){
   //color("red")
   difference(){
+    // Walls cube
     cube(w, center=true);
+    // Antimateria cube
     translate([0,Plastic_thickness,0])
       cube([w - 2*Plastic_thickness, w, w +2],
            center=true);
+    // Dig out place for bearings
+    for(i=[0,120,240])
+      rotate([0,0,i])
+      translate([0,Bearing_623_outer_radius + Smooth_rod_r,0])
+      rotate([0,90,0]){
+        scale(1.02)
+        Bearing_623(center=true);
+      }
+    // Screw across opening
+    translate([0,Bearing_623_outer_radius + Smooth_rod_r,0])
+      rotate([0,90,0])
+      scale(1.03){
+        M3_screw(h=w+1, head_height=4, center=true);
+        M3_screw(h=w+1, head_height=4, updown=true, center=true);
+      }
+    // Screws across corners
+    for(i=[120,240])
+      rotate([0,0,i])
+      translate([0,Bearing_623_outer_radius + Smooth_rod_r,0])
+      rotate([0,90,0]){
+        scale(1.02){
+          M3_screw(h=w+1, head_height=7, updown=i!=120, center=true);
+          M3_screw(h=w+1, head_height=10, updown=i==120, center=true);
+        }
+      }
+  }
+  //**** Rendering ****//
+  if(Show_screws){
     for(i=[0,120,240])
       rotate([0,0,i+0])
       translate([0,Bearing_623_outer_radius + Smooth_rod_r,0])
       rotate([0,90,0]){
-        scale(1.02)
-        #Bearing_623(center=true);
         M3_screw(h=w+1, center=true);
+      }
+  }
+  if(Show_bearings){
+    for(i=[0,120,240])
+      rotate([0,0,i])
+      translate([0,Bearing_623_outer_radius + Smooth_rod_r,0])
+      rotate([0,90,0]){
+        Bearing_623(center=true);
       }
   }
 }
 //linear_bearing();
+
+module linear_bearing2_2d(w = Linear_bearing_width - 1.5*Plastic_thickness){
+  // A triangle with a commented out chop off corner...
+  module shape(ws){
+    difference(){
+      rotate([0,0,-30])
+        circle(r=ws, $fn=3);
+      //rotate([0,0,150])
+      //  translate([-ws-Bearing_623_outer_radius-1,0,0])
+      //  square(ws, center=true);
+    }
+  }
+  difference(){
+    // Outer walls
+    shape(w + 1.5*Plastic_thickness);
+    // Antimateria triangle
+    shape(w); // Render incorrectly in preview
+    // Opening
+    translate([0,50,0])
+      square([2*Smooth_rod_r, 100], center=true);
+  }
+}
+
+// A custom linear bearing build out of three 623 rotational bearings
+module linear_bearing2(w = Linear_bearing_width){
+  //color("red")
+  difference(){
+    translate([0,0,-w/2])
+      linear_extrude(height=w, convexity=4)
+      linear_bearing2_2d();
+    // Space for screw across opening
+    translate([0,Bearing_623_outer_radius + Smooth_rod_r,0])
+      rotate([0,90,0])
+      scale(1.02){
+        M3_screw(h=w+1, head_height=4, center=true);
+        M3_screw(h=w+1, head_height=4, updown=true, center=true);
+      }
+    // Space for screws across corners
+    for(i=[120,240])
+      rotate([0,0,i])
+      translate([0,Bearing_623_outer_radius + Smooth_rod_r,0])
+      rotate([0,90,0]){
+        scale(1.02){
+          M3_screw(h=w+1, head_height=7, updown=i!=120, center=true);
+          M3_screw(h=w+1, head_height=10, updown=i==120, center=true);
+        }
+      }
+  }
+  //**** Rendering ****//
+  if(Show_screws){
+    for(i=[0,120,240])
+      rotate([0,0,i+0])
+      translate([0,Bearing_623_outer_radius + Smooth_rod_r,0])
+      rotate([0,90,0]){
+        M3_screw(h=w+1, center=true);
+      }
+  }
+  if(Show_bearings){
+    for(i=[0,120,240])
+      rotate([0,0,i])
+      translate([0,Bearing_623_outer_radius + Smooth_rod_r,0])
+      rotate([0,90,0]){
+        Bearing_623(center=true);
+      }
+  }
+}
+//linear_bearing2();
+
 
 // This is the moving part of the linear module
 // It interfaces with the leadscrew, flanged nut and smooth rods through interfaces:
@@ -274,7 +378,7 @@ module linear_bearing(w = Linear_bearing_width){
 module m_module(){
   big = 100;
   w = Linear_bearing_width;
-  r_with_nut_clearance = Flanged_nut_small_r+1;
+  r_with_nut_clearance = Flanged_nut_small_r+0.5;
   difference(){
     //color("red")
     // Bridge between linear bearings
@@ -289,6 +393,59 @@ module m_module(){
   }
   smooth_rod_split()
     linear_bearing(w);
+  //**** Below here are render only parts ****//
+  if(Show_flanged_nut){
+    translate([0,0,w/2 + Flange_offset + Flange_thickness])
+      mirror([0,0,1])
+      leadscrew_flange_nut();
+  }
+  if(Show_screws){
+    difference(){
+    translate([0,0,w/2 + Flange_offset + Flange_thickness + 0.5]) // 0.5 avoid z-fight
+      mirror([0,0,1])
+      flange_hole_translate()
+      M3_screw(h=20);
+    translate([-r_with_nut_clearance,3,-1])
+      cube([2*r_with_nut_clearance, w, big]);
+    }
+  }
+}
+//m_module();
+
+// This is the moving part of the linear module
+// It interfaces with the leadscrew, flanged nut and smooth rods through interfaces:
+//   smooth_rod_split()
+//   flange_hole_translate()
+// And through variables:
+//   Flanged_nut_small_r
+//   Flanged_nut_big_r
+//   Flange_offset
+//   Flange_thickness
+// TODO: Finish this
+module m_module2(){
+  big = 100;
+  w = Linear_bearing_width;
+  r_with_nut_clearance = Flanged_nut_small_r+0.5;
+  center_triangle_r = Smooth_rod_separation/2-1.8;
+  difference(){
+    //color("red")
+    // Bridge between linear bearings
+    translate([0,3.7,w/2-Plastic_thickness])
+      rotate([0,0,30])
+      cylinder(r=center_triangle_r, h=Plastic_thickness, $fn=3);
+    // Cutting tip of center triangle
+    translate([0,-big/2 - Linear_bearing_width/2,0])
+      cube(big, center=true);
+    // Hole for flanged nut and leadscrew to come through
+    cylinder(r = r_with_nut_clearance, h = big);
+    flange_hole_translate()
+      M3_screw(h=big);
+    // Slit for removal of leadscrew nut
+    translate([-r_with_nut_clearance,0,0])
+      cube([2*r_with_nut_clearance, w, big]);
+  }
+  smooth_rod_split()
+    linear_bearing2(w);
   //**** Below here are render only parts ****//
   if(Show_flanged_nut){
     translate([0,0,w/2 + Flange_offset + Flange_thickness])
@@ -361,7 +518,7 @@ module l_module(s = [L_module_width,Nema17_cube_width],
   }
   if(Show_m_module){
     translate([0,0,Flanged_nut_pos])
-    m_module();
+    m_module2();
   }
 }
 //l_module();

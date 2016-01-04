@@ -13,7 +13,11 @@ use <D3D_Printer.scad>
 //l_plate_holes();
 //l_plate();
 //linear_bearing();
+//linear_bearing2_2d();
+//linear_bearing2();
+//translate([0,0,40])
 //m_module();
+//m_module2();
 //l_module();
 //frame_plate();
 assembled_printer();
