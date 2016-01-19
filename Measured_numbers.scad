@@ -52,7 +52,12 @@ Flanged_nut_small_r = 10.2/2;
 Flanged_nut_big_r   = 22/2;
 
 // Smooth rods
-Smooth_rod_r      = 5; // 10 mm diameter
+Smooth_rod_r      = 4; // 8 mm diameter
+//Smooth_rod_r      = 5; // 10 mm diameter
 // NOTE:  The design of the linear actuator module imposes constraints on "smooth rod length"
 //        that depend on "leadscrew lengths" or vice verca. Since smooth rods are cheaper
 //        than leadscrews, we put smooth rod length in Design_numbers.scad
+
+LM8UU_length = 24;
+LM8UU_small_r = 4;
+LM8UU_big_r = 15/2;

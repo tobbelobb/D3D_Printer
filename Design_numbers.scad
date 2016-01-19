@@ -9,6 +9,7 @@ L_module_length       = Nema17_with_leadscrew_height + Plastic_thickness;
 L_module_width        = 2*(L_module_length/2 - 3*Nema17_screw_hole_dist); // For flush top edge
 Smooth_rod_separation = Nema17_cube_width+2*(Smooth_rod_r+3.5);
 L_plate_height        = Nema17_cube_height + Plastic_thickness;
+// Width of custom linear bearings build from rollerbearings
 Linear_bearing_width  = Smooth_rod_r*2 + Bearing_623_outer_radius + 2*Plastic_thickness + M3_radius;
 // Steel Frame
 Side_length       = L_module_length;                 // Lengths of sides of individual sheets

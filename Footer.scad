@@ -18,6 +18,9 @@ use <D3D_Printer.scad>
 //translate([0,0,40])
 //m_module();
 //m_module2();
+//m_module3();
 //l_module();
 //frame_plate();
 assembled_printer();
+//Hose_clamp1(h=8, r=LM8UU_big_r+2);
+//Hose_clamp(h=8, r=LM8UU_big_r+2);

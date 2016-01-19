@@ -421,7 +421,6 @@ module m_module(){
 //   Flanged_nut_big_r
 //   Flange_offset
 //   Flange_thickness
-// TODO: Finish this
 module m_module2(){
   big = 100;
   w = Linear_bearing_width;
@@ -463,7 +462,67 @@ module m_module2(){
     }
   }
 }
-//m_module();
+//m_module2();
+
+module m_module3(h = 4*LM8UU_length){
+  flange_nut_offset = Flanged_nut_small_r+1;
+  LM8UU_to_edge = 4;
+  translate([0,0,-h/2])
+  for(i=[0,1]){
+    translate([0,0,i*h])
+    mirror([0,0,i]){
+      difference(){
+        translate([-Smooth_rod_separation/2 - 2*LM8UU_big_r,0,0])
+          cube([Smooth_rod_separation + 4*LM8UU_big_r, Plastic_thickness, h/2+1]);
+        smooth_rod_split(){
+          // Lower LM8UU groove
+          translate([0,0,LM8UU_to_edge]){
+            cylinder(r = LM8UU_big_r, h = LM8UU_length); // Cylinder stand-in for LM8UU
+            translate([0,0,-4+LM8UU_length/2])
+              rotate([0,0,-90])
+              Hose_clamp(h=8, r=LM8UU_big_r+2.5, th=1, jacks=false);
+          }
+          translate([0,0,-1])
+            cylinder(r=Smooth_rod_r+0.2, h=100);
+        }
+        // Cutout for flange nut in Z-direction
+        translate([-Flanged_nut_big_r-1, -1, -1])
+          cube([2*Flanged_nut_big_r+2, Plastic_thickness+2, Flanged_nut_height+2]);
+        // Screw holes
+        translate([0,Plastic_thickness+1,h/2])
+          rotate([90,0,0])
+          Nema17_screw_holes(r = 1.5, h = 10);
+      }
+      difference(){
+        // Push area for flanged nut
+        translate([-Flanged_nut_big_r-1,-flange_nut_offset-Flanged_nut_big_r, Flanged_nut_height+1])
+          cube([2*Flanged_nut_big_r+2, flange_nut_offset + Flanged_nut_big_r, Plastic_thickness]);
+        translate([0,-flange_nut_offset,0]){
+          // Cylindrical cutout in XY-plane for flanged nut
+          cylinder(r=Flanged_nut_small_r+1, h=100);
+          translate([0,0,10])
+            flange_hole_translate()
+            M3_screw(20); // Holes for fastening flanged nut in push area
+        }
+      }
+      if(Show_flanged_nut){
+        translate([0,-flange_nut_offset,Flange_offset + Flange_thickness/2 + LM8UU_length/2])
+          mirror([0,0,1])
+          leadscrew_flange_nut();
+      }
+      if(Show_LM8UU){
+        translate([0,0,LM8UU_to_edge])
+        smooth_rod_split(){
+          LM8UU();
+          translate([0,0,-4+LM8UU_length/2])
+            rotate([0,0,-90])
+            Hose_clamp(h=8, r=LM8UU_big_r+2.5);
+        }
+      }
+    }
+  }
+}
+//m_module3();
 
 // A linear actuator based on a leadscrew, a nut and a stepper motor
 // s: XY size of plate (vector or scalar)
@@ -518,7 +577,8 @@ module l_module(s = [L_module_width,Nema17_cube_width],
   }
   if(Show_m_module){
     translate([0,0,Flanged_nut_pos])
-    m_module2();
+    mirror([0,1,0])
+      m_module3();
   }
 }
 //l_module();
@@ -607,4 +667,4 @@ module assembled_printer(){
   rotate([-90,0,-90])
   l_module();
 }
-assembled_printer();
+//assembled_printer();

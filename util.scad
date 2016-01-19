@@ -130,3 +130,58 @@ module Rounded_square(s, r){
       square([s[0], s[1]-2*r]);
   }
 }
+
+module LM8UU(){
+  color("grey")
+  difference(){
+    cylinder(r = LM8UU_big_r, h = LM8UU_length);
+    translate([0,0,-1])
+      cylinder(r = LM8UU_small_r, h = LM8UU_length+2);
+  }
+}
+//LM8UU();
+
+module Hose_clamp1(h, r){
+  big = 100;
+  difference(){
+    union(){
+      cylinder(r = r, h = h);
+      translate([0,-2,0])
+        cube([r+3, 4, h]);
+    }
+    translate([0,0,-1])
+      cylinder(r = r-0.8, h = h+2);
+    translate([0,-1,-1])
+      cube([big, 2, h+2]);
+  }
+}
+//Hose_clamp1();
+
+module Hose_clamp(h, r, th=0.8, jacks=true){
+  big = 100;
+  flerp = 10;
+  color("lightgrey")
+  difference(){
+    union(){
+      cylinder(r = r, h = h);
+      translate([0,-2,0])
+        cube([r+5, 4, h]);
+      rotate([0,0,-15])
+      translate([r-th,-flerp,0])
+        cube([th, flerp, h]);
+    }
+    translate([0,0,-1])
+      cylinder(r = r-th, h = h+2);
+    if(jacks){
+      for(i=[0:100/r:360]){
+        rotate([0,0,i])
+        translate([0,0,h/4])
+          cube([r+3,0.5,h/2]);
+      }
+    }
+    translate([r+1, 5, h/2])
+    rotate([90,0,0])
+      M3_screw(16, updown=true);
+  }
+}
+//Hose_clamp(h=8, r=LM8UU_big_r+2);
