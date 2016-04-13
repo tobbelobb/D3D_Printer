@@ -557,27 +557,22 @@ module l_module(h = L_module_length,
 //translate([0,80,0])
 //l_module();
 
-module smooth_rod_translate(){
-  translate([Smooth_rod_r + 2 + Nema17_cube_width/2,0,0])
-    children();
-}
-
 module l_plate2(h=Plastic_thickness){
   big = 100;
   color("red")
   difference(){
     union(){
-      translate([+(4 + 2*Smooth_rod_r)/2,0,0])
+      translate([Space_besides_Nema17_interface/2,0,0])
         // Main block
-        cube([Nema17_cube_width + (4 + 2*Smooth_rod_r),
-            Nema17_cube_width,
+        cube([Interfacing_block_height,
+            Interfacing_block_width,
             h],
             center=true);
-      translate([Smooth_rod_r + 2 + Nema17_cube_width/2,0,0])
+      translate([Smooth_rod_off_center,0,0])
         difference(){
           // Clamp
-          cylinder(r=Smooth_rod_r+1.7, h = Clamp_height);
-          cube([2,big,big],center=true);
+          cylinder(r=Smooth_rod_r+Clamp_thickness, h = Clamp_height);
+          cube([Clamp_opening,big,big],center=true);
         }
     }
     // Opening for bearing
@@ -586,11 +581,12 @@ module l_plate2(h=Plastic_thickness){
     Nema17_screw_translate()
       // Screw holes
       cylinder(r=1.8,h=h+10, center=true);
-    smooth_rod_translate()
+    translate([Smooth_rod_off_center,0,0])
       // Opening for smooth rod
       cylinder(r=Smooth_rod_r+0.35, h = big, center=true);
   }
 }
+//l_plate2();
 
 module LM8UU_bands(h, th){
     for(l = [3, LM8UU_length-3-h])
@@ -608,17 +604,17 @@ module move_plate2(){
   move_plate_off_center = Smooth_rod_r + Plastic_thickness/2 + 0.7;
   color("red"){
     difference(){
-      translate([+(4 + 2*LM8UU_big_r)/2,0,0])
+      translate([Space_besides_Nema17_interface/2,0,0])
         // Main block
-        cube([Nema17_cube_width + (4 + 2*LM8UU_big_r),
-            2*LM8UU_length + 1 + 4,
+        cube([Interfacing_block_height ,
+            Interfacing_block_width,
             Plastic_thickness],
             center=true);
       Nema17_screw_translate()
         // Screw holes
         cylinder(r=1.8,h=Plastic_thickness+10, center=true);
       // Grooves for LM8UU linear bearings
-      translate([Nema17_cube_width/2+Smooth_rod_r+4,0,-move_plate_off_center]){
+      translate([Smooth_rod_off_center,0,-move_plate_off_center]){
         translate([0,-1,0])
           rotate([90,0,0]){
             LM8UU();
@@ -676,25 +672,22 @@ module move_plate2(){
 module l_module2(){
   Nema17();
   leadscrew();
-  local_plastic_thickness = 5.5;
-  move_plate_off_center = Smooth_rod_r + local_plastic_thickness/2 + 0.7;
-  translate([0,0,local_plastic_thickness/2+Nema17_cube_height])
+  move_plate_off_center = Smooth_rod_r + Plastic_thickness/2 + 0.7;
+  translate([0,0,Plastic_thickness/2+Nema17_cube_height])
     // Bottom plate (near Nema17)
-    l_plate2(local_plastic_thickness);
-  translate([0,0,-local_plastic_thickness/2+Nema17_with_leadscrew_height]){
+    l_plate2();
+  translate([0,0,-Plastic_thickness/2+Nema17_with_leadscrew_height]){
     rotate([180,0,0])
       // Top plate
-      l_plate2(local_plastic_thickness);
+      l_plate2();
   }
   translate([0,0,Nema17_with_leadscrew_height-Bearing_608_width-0.1])
     // Bearing
     Bearing_608();
     translate([0,0,Nema17_cube_height])
-    smooth_rod_translate(){
+    translate([Smooth_rod_off_center,0,0]){
       // Smooth rod
-      color("grey")
-        cylinder(r=Smooth_rod_r,
-                 h=Nema17_with_leadscrew_height-Nema17_cube_height);
+      smooth_rod();
       // Place LM8UUs relative to center of flanged nut
       if(Show_LM8UU){
         translate([0,0,Flanged_nut_pos-Nema17_cube_height+Flanged_nut_height/2]){
@@ -717,13 +710,85 @@ module l_module2(){
 
 module XY_actuators(){
   for(y=[0,1])
-  translate([y*(0.6+2*Plastic_thickness + 2*Smooth_rod_r + Nema17_with_leadscrew_height),0,0])
-  mirror([y,0,0])
-  rotate([-90,0,0])
-    rotate([0,0,90])
-    l_module2();
+    translate([y*(0.6+2*Plastic_thickness + 2*Smooth_rod_r + Nema17_with_leadscrew_height),0,0])
+      mirror([y,0,0])
+      rotate([-90,0,0])
+      rotate([0,0,90])
+      l_module2();
+  translate([Leadscrew_r+0.6+Plastic_thickness,
+             Flanged_nut_pos + Flanged_nut_height/2,0])
+  rotate([0,90,0])
+  l_module2();
 }
-//XY_actuators();
+XY_actuators();
+
+module top_frame(){
+  translate([-Interfacing_block_width/2,
+             Nema17_cube_height,
+             -Steel_thickness-Nema17_cube_width/2-Space_besides_Nema17_interface])
+    difference(){
+      cube([Top_frame_width,Top_frame_height,Steel_thickness]);
+      translate([Top_frame_band_width, Top_frame_band_height,-1])
+      cube([Top_frame_width - 2*Top_frame_band_width,
+            Top_frame_height - 2*Top_frame_band_height,
+            Steel_thickness+2]);
+  }
+}
+top_frame();
+
+module Z_actuator(){
+  translate([-Interfacing_block_width/2 + Top_frame_width/2,
+             -Interfacing_block_width/2+Nema17_with_leadscrew_height,
+             -Nema17_cube_width/2-Space_besides_Nema17_interface])
+  l_module2();
+  for(s=[-1,1])
+  translate([-Interfacing_block_width/2+Top_frame_width/2 + s*211/2,
+             Nema17_cube_height+Top_frame_band_height/2,
+             -Nema17_cube_width/2-Space_besides_Nema17_interface])
+  rotate([0,0,90])
+  idle_smooth_rod();
+}
+Z_actuator();
+
+module smooth_rod(){
+  color("grey")
+    cylinder(r=Smooth_rod_r,
+        h=Nema17_with_leadscrew_height-Nema17_cube_height);
+}
+
+module idle_smooth_rod_holder(){
+  big = 200;
+  color("red")
+  difference(){
+    union(){
+      translate([-Interfacing_block_width/2,-Interfacing_block_height/2,0])
+        // Main cube
+        cube([Interfacing_block_width,
+            Interfacing_block_height,
+            Plastic_thickness]);
+      // Tower
+      cylinder(r1=12,r2=Smooth_rod_r+Clamp_thickness-0.5,h=40,$fn=40);
+      cylinder(r=Smooth_rod_r+Clamp_thickness, h=50, $fn=40);
+    }
+    translate([0,0,-1])
+      scale([1.01,1.01,1])
+      // Hole for smooth rod
+      smooth_rod();
+    Nema17_screw_translate()
+      // Screw holes
+      cylinder(r=1.8,h=100, center=true);
+    // Slit in clamp
+    translate([0,0,big/2+Plastic_thickness+14])
+    cube([Clamp_opening,big,big],center=true);
+  }
+}
+//idle_smooth_rod_holder();
+
+module idle_smooth_rod(){
+  smooth_rod();
+  idle_smooth_rod_holder();
+}
+//idle_smooth_rod();
 
 // Screw holes for fastening motors and corners
 module frame_holes_2d(){

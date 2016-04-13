@@ -8,7 +8,7 @@ Clamp_height          = Nema17_cube_height/2 - 2;   // Must be < Nema17_cube_hei
 //L_module_length       = Nema17_with_leadscrew_height + Plastic_thickness;
 L_module_length       = Nema17_with_leadscrew_height; // No bottom plastic
 L_module_width        = 2*(L_module_length/2 - 3*Nema17_screw_hole_dist); // For flush top edge
-Smooth_rod_separation = Nema17_cube_width+2*(Smooth_rod_r+3.5);
+Smooth_rod_separation = Nema17_cube_width+2*(Smooth_rod_r+4);
 L_plate_height        = Nema17_cube_height + Plastic_thickness;
 // Width of custom linear bearings build from rollerbearings
 Linear_bearing_width  = Smooth_rod_r*2 + Bearing_623_outer_radius + 2*Plastic_thickness + M3_radius;
@@ -19,6 +19,19 @@ Cube_Y_length     = Side_length + 2*Steel_thickness; // determined by corner mou
 Cube_Z_length     = Side_length;
 Frame_width       = max(2*Plastic_thickness + Nema17_cube_height, // See module mounting strategy
                         Nema17_cube_width + Steel_thickness);     // Flush l_modules and frame
+//** For stripped version **//
+Smooth_rod_off_center = Smooth_rod_separation/2;
+Interfacing_block_width = 2*LM8UU_length + 1 + 4;
+Interfacing_block_height = Nema17_cube_width + (4 + 2*LM8UU_big_r);
+Space_besides_Nema17_interface = Interfacing_block_height - Nema17_cube_width;
+
+Top_frame_width = Nema17_with_leadscrew_height+2*(Plastic_thickness+0.6+Smooth_rod_r)+Interfacing_block_width;
+Top_frame_height = Nema17_with_leadscrew_height-Nema17_cube_height;
+Top_frame_band_width = Interfacing_block_width;
+Top_frame_band_height = Interfacing_block_width;
+
+Clamp_thickness = 1.7;
+Clamp_opening   = 2;
 
 // ********** Echoed derived design numbers below here ********** //
 echo("Steel sheet frame weight (kg):");
