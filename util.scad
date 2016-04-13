@@ -185,3 +185,30 @@ module Hose_clamp(h, r, th=0.8, jacks=true){
   }
 }
 //Hose_clamp(h=8, r=LM8UU_big_r+2);
+
+// 2d profile of a four threaded leadscrew (square threads)
+// r: Radius of threads along X and Y axes
+module leadscrew_2d(r, number_of_starts){
+  circle(r=r-1);
+  for(i=[0:360/number_of_starts:359])
+    rotate([0,0,i])
+      translate([-1,0,0])
+      square([2,r]);
+}
+//leadscrew_2d(4, 4);
+
+// Four threaded leadscrew (square threads) without nut
+// r: Radius of threads along X and Y axes
+// lead_of_thread: length of linear travel per revolution
+// h: height of leadscrew
+module leadscrew(r                = Leadscrew_r,
+                 lead_of_thread   = Leadscrew_lead_of_thread,
+                 h                = Nema17_with_leadscrew_height,
+                 number_of_starts = Leadscrew_number_of_starts){
+  revs = h/lead_of_thread;
+  color("LightSlateGrey")
+  linear_extrude(height=h, twist=-revs*360)
+    leadscrew_2d(r, number_of_starts);
+}
+//leadscrew();
+

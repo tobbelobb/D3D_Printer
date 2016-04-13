@@ -1,11 +1,12 @@
 // ********** Design numbers we're going to use when manufacturing by ourselves  ********** //
 // ********** Derive these numbers to keep total design information content down ********** //
 // General
-Plastic_thickness = M3_wrench_size;                  // For plastic sheets/walls. Use sensibly
+Plastic_thickness = 6.3;                  // For plastic sheets/walls. Use sensibly
 // Linear actuator module
 Smooth_rod_length = Nema17_with_leadscrew_height + Plastic_thickness;
 Clamp_height          = Nema17_cube_height/2 - 2;   // Must be < Nema17_cube_height/2
-L_module_length       = Nema17_with_leadscrew_height + Plastic_thickness;
+//L_module_length       = Nema17_with_leadscrew_height + Plastic_thickness;
+L_module_length       = Nema17_with_leadscrew_height; // No bottom plastic
 L_module_width        = 2*(L_module_length/2 - 3*Nema17_screw_hole_dist); // For flush top edge
 Smooth_rod_separation = Nema17_cube_width+2*(Smooth_rod_r+3.5);
 L_plate_height        = Nema17_cube_height + Plastic_thickness;

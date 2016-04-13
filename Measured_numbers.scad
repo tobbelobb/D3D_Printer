@@ -38,14 +38,14 @@ Bearing_623_bore_radius    = 1.5;
 Bearing_623_outer_radius   = 5;
 
 // Leadscrew
-Nema17_with_leadscrew_height           = 300;
+Nema17_with_leadscrew_height           = 340;
 Leadscrew_number_of_starts             = 4;
 Leadscrew_r                            = 4;
 Leadscrew_lead_of_thread               = 8;
 Leadscrew_flanged_nut_screw_hole_width = 16; // Opposite corner screws
 
 // Flanged nut
-Flanged_nut_height  = 15;
+Flanged_nut_height  = 9;
 Flange_thickness    = 3.5;
 Flange_offset       = 1.5;
 Flanged_nut_small_r = 10.2/2;
@@ -58,6 +58,7 @@ Smooth_rod_r      = 4; // 8 mm diameter
 //        that depend on "leadscrew lengths" or vice verca. Since smooth rods are cheaper
 //        than leadscrews, we put smooth rod length in Design_numbers.scad
 
-LM8UU_length = 24;
+//LM8UU_length = 24;
+LM8UU_length = 24.4; // Elongenated for better push fit
 LM8UU_small_r = 4;
 LM8UU_big_r = 15/2;

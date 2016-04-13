@@ -38,32 +38,6 @@ module smooth_rods(smooth_rod_separation = Smooth_rod_separation,
 }
 //smooth_rods(20, 30, 3);
 
-// 2d profile of a four threaded leadscrew (square threads)
-// r: Radius of threads along X and Y axes
-module leadscrew_2d(r, number_of_starts){
-  circle(r=r-1);
-  for(i=[0:360/number_of_starts:359])
-    rotate([0,0,i])
-      translate([-1,0,0])
-      square([2,r]);
-}
-//leadscrew_2d(4, 4);
-
-// Four threaded leadscrew (square threads) without nut
-// r: Radius of threads along X and Y axes
-// lead_of_thread: length of linear travel per revolution
-// h: height of leadscrew
-module leadscrew(r                = Leadscrew_r,
-                 lead_of_thread   = Leadscrew_lead_of_thread,
-                 h                = Nema17_with_leadscrew_height,
-                 number_of_starts = Leadscrew_number_of_starts){
-  revs = h/lead_of_thread;
-  color("LightSlateGrey")
-  linear_extrude(height=h, twist=-revs*360)
-    leadscrew_2d(r, number_of_starts);
-}
-//leadscrew();
-
 // Helper translating module to easier match screw holes in flange and moving bit
 // Defines flange planar interface
 module flange_hole_translate(){
@@ -528,8 +502,7 @@ module m_module3(h = 4*LM8UU_length){
 // s: XY size of plate (vector or scalar)
 // h: full length of the module. Note! leadscrew_length < h
 // smooth_rod_separation: Between smooth rod centers
-module l_module(s = [L_module_width,Nema17_cube_width],
-                h = L_module_length,
+module l_module(h = L_module_length,
                 smooth_rod_separation=Smooth_rod_separation){
   // Plates under motor
   l_plate();
@@ -581,7 +554,176 @@ module l_module(s = [L_module_width,Nema17_cube_width],
       m_module3();
   }
 }
+//translate([0,80,0])
 //l_module();
+
+module smooth_rod_translate(){
+  translate([Smooth_rod_r + 2 + Nema17_cube_width/2,0,0])
+    children();
+}
+
+module l_plate2(h=Plastic_thickness){
+  big = 100;
+  color("red")
+  difference(){
+    union(){
+      translate([+(4 + 2*Smooth_rod_r)/2,0,0])
+        // Main block
+        cube([Nema17_cube_width + (4 + 2*Smooth_rod_r),
+            Nema17_cube_width,
+            h],
+            center=true);
+      translate([Smooth_rod_r + 2 + Nema17_cube_width/2,0,0])
+        difference(){
+          // Clamp
+          cylinder(r=Smooth_rod_r+1.7, h = Clamp_height);
+          cube([2,big,big],center=true);
+        }
+    }
+    // Opening for bearing
+    cylinder(r = Bearing_608_outer_diameter/2 + 0.2,
+        h = h+1, center=true);
+    Nema17_screw_translate()
+      // Screw holes
+      cylinder(r=1.8,h=h+10, center=true);
+    smooth_rod_translate()
+      // Opening for smooth rod
+      cylinder(r=Smooth_rod_r+0.35, h = big, center=true);
+  }
+}
+
+module LM8UU_bands(h, th){
+    for(l = [3, LM8UU_length-3-h])
+      translate([0,0,l])
+        //rotate([0,0,-12])
+          //scale([1,1.15,1])
+            difference(){
+              cylinder(r=LM8UU_big_r+1.2+th, h=h);
+              translate([0,0,-1])
+              cylinder(r=LM8UU_big_r+1.2, h=h+2);
+            }
+}
+
+module move_plate2(){
+  move_plate_off_center = Smooth_rod_r + Plastic_thickness/2 + 0.7;
+  color("red"){
+    difference(){
+      translate([+(4 + 2*LM8UU_big_r)/2,0,0])
+        // Main block
+        cube([Nema17_cube_width + (4 + 2*LM8UU_big_r),
+            2*LM8UU_length + 1 + 4,
+            Plastic_thickness],
+            center=true);
+      Nema17_screw_translate()
+        // Screw holes
+        cylinder(r=1.8,h=Plastic_thickness+10, center=true);
+      // Grooves for LM8UU linear bearings
+      translate([Nema17_cube_width/2+Smooth_rod_r+4,0,-move_plate_off_center]){
+        translate([0,-1,0])
+          rotate([90,0,0]){
+            LM8UU();
+            LM8UU_bands(h=6, th=1.2);
+          }
+        translate([0,LM8UU_length + 1,0])
+          rotate([90,0,0]){
+            LM8UU();
+            LM8UU_bands(h=6, th=1.2);
+          }
+      }
+      // Hole for flanged nut
+      rotate([-90,0,0])
+        scale(1.02){
+          translate([0,0,-Flanged_nut_height/2])
+            hull(){
+              translate([0,0,2])
+                leadscrew_flange_nut();
+              translate([0,0,-2])
+                leadscrew_flange_nut();
+            }
+        }
+      translate([-Flanged_nut_small_r,
+                 -Flanged_nut_height,
+                 -(Plastic_thickness/2+1)])
+        // Extra space for backwards mounted flanged nut
+        cube([2*Flanged_nut_small_r,10,Plastic_thickness+2]);
+    }
+    for(k=[0,1])
+      mirror([k,0,0])
+        difference(){
+          translate([Flanged_nut_small_r,0,
+              -1.7*Flanged_nut_big_r+Plastic_thickness/2])
+            // Blocks that flanged nut pushes
+            cube([Flanged_nut_big_r-Flanged_nut_small_r+1,
+                Plastic_thickness,
+                1.7*Flanged_nut_big_r]);
+          // Elongenated holes for fastening flanged nut
+            hull(){
+              translate([0,0,-7])
+                rotate([-90,0,0])
+                translate([Leadscrew_flanged_nut_screw_hole_width/2,0,-1])
+                cylinder(r=1.7,h=25,center=true);
+              translate([0,0,-11])
+                rotate([-90,0,0])
+                translate([Leadscrew_flanged_nut_screw_hole_width/2,0,-1])
+                cylinder(r=1.7,h=25,center=true);
+            }
+        }
+  } // end color red
+}
+//rotate([180,0,0])
+//move_plate2();
+
+module l_module2(){
+  Nema17();
+  leadscrew();
+  local_plastic_thickness = 5.5;
+  move_plate_off_center = Smooth_rod_r + local_plastic_thickness/2 + 0.7;
+  translate([0,0,local_plastic_thickness/2+Nema17_cube_height])
+    // Bottom plate (near Nema17)
+    l_plate2(local_plastic_thickness);
+  translate([0,0,-local_plastic_thickness/2+Nema17_with_leadscrew_height]){
+    rotate([180,0,0])
+      // Top plate
+      l_plate2(local_plastic_thickness);
+  }
+  translate([0,0,Nema17_with_leadscrew_height-Bearing_608_width-0.1])
+    // Bearing
+    Bearing_608();
+    translate([0,0,Nema17_cube_height])
+    smooth_rod_translate(){
+      // Smooth rod
+      color("grey")
+        cylinder(r=Smooth_rod_r,
+                 h=Nema17_with_leadscrew_height-Nema17_cube_height);
+      // Place LM8UUs relative to center of flanged nut
+      if(Show_LM8UU){
+        translate([0,0,Flanged_nut_pos-Nema17_cube_height+Flanged_nut_height/2]){
+          translate([0,0,1])
+            LM8UU();
+          translate([0,0,-LM8UU_length-1])
+            LM8UU();
+        }
+      }
+    }
+  translate([0,-move_plate_off_center,
+               Flanged_nut_pos+Flanged_nut_height/2])
+  //translate([0,0,Flanged_nut_pos+Flanged_nut_height/2])
+    rotate([90,0,0])
+      move_plate2();
+  translate([0,0,Flanged_nut_pos])
+    leadscrew_flange_nut();
+}
+//l_module2();
+
+module XY_actuators(){
+  for(y=[0,1])
+  translate([y*(0.6+2*Plastic_thickness + 2*Smooth_rod_r + Nema17_with_leadscrew_height),0,0])
+  mirror([y,0,0])
+  rotate([-90,0,0])
+    rotate([0,0,90])
+    l_module2();
+}
+//XY_actuators();
 
 // Screw holes for fastening motors and corners
 module frame_holes_2d(){
