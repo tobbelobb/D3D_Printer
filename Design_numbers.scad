@@ -26,12 +26,15 @@ Interfacing_block_height = Nema17_cube_width + (4 + 2*LM8UU_big_r);
 Space_besides_Nema17_interface = Interfacing_block_height - Nema17_cube_width;
 
 Top_frame_width = Nema17_with_leadscrew_height+2*(Plastic_thickness+0.6+Smooth_rod_r)+Interfacing_block_width;
-Top_frame_height = Nema17_with_leadscrew_height-Nema17_cube_height;
+Top_frame_height = Nema17_with_leadscrew_height+Nema17_cube_height;
 Top_frame_band_width = Interfacing_block_width;
 Top_frame_band_height = Interfacing_block_width;
+Interfacing_block_edge = (Interfacing_block_width-Nema17_cube_width)/2;
 
 Clamp_thickness = 1.7;
 Clamp_opening   = 2;
+
+Bed_lock_height = 30;
 
 // ********** Echoed derived design numbers below here ********** //
 echo("Steel sheet frame weight (kg):");

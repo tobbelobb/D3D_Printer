@@ -559,6 +559,7 @@ module l_module(h = L_module_length,
 
 module l_plate2(h=Plastic_thickness){
   big = 100;
+  fastencube_width = Interfacing_block_width-Nema17_screw_hole_dist - 2*Plastic_thickness;
   color("red")
   difference(){
     union(){
@@ -570,10 +571,32 @@ module l_plate2(h=Plastic_thickness){
             center=true);
       translate([Smooth_rod_off_center,0,0])
         difference(){
-          // Clamp
+          // Smooth rod clamp
           cylinder(r=Smooth_rod_r+Clamp_thickness, h = Clamp_height);
           cube([Clamp_opening,big,big],center=true);
         }
+      for(i=[1,-1])
+      translate([Nema17_cube_width/2
+              + Space_besides_Nema17_interface
+              - Plastic_thickness, // End translate x
+                i*(Nema17_screw_hole_dist/2)
+              - fastencube_width/2, // End translate y
+                0]){
+        difference(){
+          // Cubes to fasten along frame sheet
+          cube([Plastic_thickness,
+                fastencube_width,
+                fastencube_width+Plastic_thickness/2]);
+          translate([-0.1,
+                     fastencube_width/2,
+                     Plastic_thickness/2+fastencube_width/2])
+            rotate([0,90,0])
+            rotate([0,0,-15])
+            scale(1.02)
+            //M3_screw(2*Plastic_thickness);
+            cylinder(r=1.7,h=2*Plastic_thickness+2,center=true);
+        }
+      }
     }
     // Opening for bearing
     cylinder(r = Bearing_608_outer_diameter/2 + 0.2,
@@ -584,7 +607,7 @@ module l_plate2(h=Plastic_thickness){
     translate([Smooth_rod_off_center,0,0])
       // Opening for smooth rod
       cylinder(r=Smooth_rod_r+0.35, h = big, center=true);
-  }
+  } // end difference
 }
 //l_plate2();
 
@@ -667,9 +690,165 @@ module move_plate2(){
   } // end color red
 }
 //rotate([180,0,0])
+//translate([Nema17_cube_width/2,Interfacing_block_width/2,-Plastic_thickness/2])
 //move_plate2();
 
-module l_module2(){
+module z_actuator_plate(){
+  edge_to_smooth_rod = Nema17_cube_width/2+Smooth_rod_off_center;
+  height2 = 1.618*edge_to_smooth_rod;
+  stick_height = Bed_lock_height;
+  //echo("height2:");
+  //echo(height2); // 81.59
+  difference(){
+    // Bottom block
+    cube([Interfacing_block_height ,
+        Interfacing_block_width,
+        Plastic_thickness],
+        center=false);
+    translate([Nema17_cube_width/2,Interfacing_block_width/2,-1])
+      // Screw holes
+      Nema17_screw_holes(1.7,10);
+    translate([(Nema17_cube_width-Nema17_screw_hole_dist)/2,(Interfacing_block_width-Nema17_screw_hole_dist)/2,-1])
+      // Big hole in bottom block
+      Rounded_cube([Nema17_screw_hole_dist, Nema17_screw_hole_dist,10],
+                  6,$fn=4);
+  }
+    translate([0,0,
+               Plastic_thickness-0.1])
+      difference(){
+        // Support triangles along Nema17 interface
+        cube([edge_to_smooth_rod,
+            Interfacing_block_width,
+            height2]);
+        rotate([0,-atan(1.618)-1.6,0]){//1.6 hand adjusted to flush
+          translate([0,-1,0])
+          // Cut away to make triangles from cubes
+          cube([100,
+              Interfacing_block_width+2,
+              height2]);
+          translate([0,-1,-height2-Plastic_thickness])
+          // Inner antimateria triangle
+          cube([100,
+              Interfacing_block_width+2,
+              height2]);
+        }
+        w = (edge_to_smooth_rod-Plastic_thickness/2)/3;
+        translate([0,Plastic_thickness,0]){
+          cube([w-(2/3)*Plastic_thickness,
+                Interfacing_block_width-2*Plastic_thickness,60]);
+          translate([w+(1/3)*Plastic_thickness,0,0]){
+            cube([w-(2/3)*Plastic_thickness,
+                  Interfacing_block_width-2*Plastic_thickness,60]);
+            translate([w+(1/3)*Plastic_thickness,0,0])
+              cube([w-(2/3)*Plastic_thickness,
+                     Interfacing_block_width-2*Plastic_thickness,100]);
+          }
+        }
+      }
+  translate([edge_to_smooth_rod-Plastic_thickness/2,
+      0,
+      Plastic_thickness-0.1])
+      // Standing cube with triangle support
+      cube([Plastic_thickness,
+          Interfacing_block_width,
+          height2]);
+  translate([edge_to_smooth_rod-Plastic_thickness/2,
+  -stick_height,
+  height2-Plastic_thickness/2])
+    // The stick
+    cube([Plastic_thickness,
+        Interfacing_block_width+stick_height,
+        Plastic_thickness]);
+  translate([edge_to_smooth_rod,0,height2])
+  rotate([-90,0,0])
+  cylinder(r1=2.75*Plastic_thickness/2,r2=Plastic_thickness/2,h=Plastic_thickness);
+
+
+}
+//z_actuator_plate();
+
+module idle_smooth_rod_move_plate(){
+  edge_to_smooth_rod = Nema17_cube_width/2+Smooth_rod_off_center;
+  height2 = 1.618*edge_to_smooth_rod;
+  stick_height = Bed_lock_height;
+  difference(){
+    union(){
+      translate([-Plastic_thickness/2,0,0])
+        cube([Plastic_thickness,
+              height2,
+              Interfacing_block_width]);
+      translate([-Plastic_thickness/2,
+                 height2-Plastic_thickness,0])
+        cube([Plastic_thickness,
+              Plastic_thickness,
+              Interfacing_block_width+stick_height]);
+      translate([0,
+          height2 - Plastic_thickness/2,
+          Interfacing_block_width-Plastic_thickness])
+        // Funnel shaped spring support
+        cylinder(r2=2.75*Plastic_thickness/2,
+                 r1=Plastic_thickness/2,
+                 h=Plastic_thickness);
+      cylinder(r=LM8UU_big_r + 2, h=Interfacing_block_width);
+    }
+    translate([0,0,-1])
+      cylinder(r=LM8UU_big_r + 0.1, h=Interfacing_block_width+2);
+  }
+}
+//idle_smooth_rod_move_plate();
+
+module bed_holder_interface(){
+  difference(){
+    union(){
+      // Tower
+      translate([-(Plastic_thickness+4)/2,-(Plastic_thickness+4)/2,0])
+        cube([Plastic_thickness+9,Plastic_thickness+4,Bed_lock_height]);
+      // Bottom block
+      translate([-Nema17_cube_width/2,-Nema17_cube_width/2,0])
+        cube([Nema17_cube_width,Nema17_cube_width,Plastic_thickness]);
+      translate([0,0,Bed_lock_height-Plastic_thickness])
+        cylinder(r2=2.75*Plastic_thickness/2,
+            r1=Plastic_thickness/2,
+            h=Plastic_thickness);
+    }
+    translate([-(Plastic_thickness+0.2)/2,-(Plastic_thickness+0.2)/2,-1])
+      cube([Plastic_thickness+0.2,Plastic_thickness+0.2,Bed_lock_height+2]);
+    // Nut lock
+    translate([5,0,Bed_lock_height-4]){
+      rotate([0,90,0])
+        M3_screw(10);
+      rotate([180,90,0])
+        translate([0,0,-M3_head_height])
+        M3_screw(8);
+      translate([0,-(M3_wrench_size+0.3)/2,0])
+        cube([M3_head_height,M3_wrench_size+0.3,100]);
+    }
+    translate([0,0,-1])
+      Nema17_screw_holes(1.7,Plastic_thickness+2);
+  }
+}
+//bed_holder_interface();
+
+module move_plate_with_z_actuator_plate(){
+  edge_to_smooth_rod = Nema17_cube_width/2+Smooth_rod_off_center;
+  height2 = 1.618*edge_to_smooth_rod;
+  stick_height = Bed_lock_height;
+  translate([-Nema17_cube_width/2,
+      -Interfacing_block_width/2,
+      Plastic_thickness/2])
+    z_actuator_plate();
+  move_plate2();
+  translate([Smooth_rod_off_center,
+      -Interfacing_block_width/2-Bed_lock_height-3,
+      height2+Plastic_thickness/2])
+    rotate([-90,0,0])
+    // Bed holder
+    bed_holder_interface();
+}
+//move_plate_with_z_actuator_plate();
+
+
+module l_module2(z=false){
   Nema17();
   leadscrew();
   move_plate_off_center = Smooth_rod_r + Plastic_thickness/2 + 0.7;
@@ -702,29 +881,38 @@ module l_module2(){
                Flanged_nut_pos+Flanged_nut_height/2])
   //translate([0,0,Flanged_nut_pos+Flanged_nut_height/2])
     rotate([90,0,0])
-      move_plate2();
+      if(z){
+        move_plate_with_z_actuator_plate();
+      }else{
+        move_plate2();
+      }
   translate([0,0,Flanged_nut_pos])
     leadscrew_flange_nut();
 }
 //l_module2();
 
 module XY_actuators(){
-  for(y=[0,1])
-    translate([y*(0.6+2*Plastic_thickness + 2*Smooth_rod_r + Nema17_with_leadscrew_height),0,0])
+  for(y=[0,2])
+    translate([y*(0.6
+                  +Plastic_thickness
+                  +Smooth_rod_r
+                  +Nema17_with_leadscrew_height/2), //End translate x
+               0,0])
       mirror([y,0,0])
       rotate([-90,0,0])
       rotate([0,0,90])
+      // The two Y modules
       l_module2();
-  translate([Leadscrew_r+0.6+Plastic_thickness,
-             Flanged_nut_pos + Flanged_nut_height/2,0])
-  rotate([0,90,0])
-  l_module2();
+  translate([Leadscrew_r+0.6+Plastic_thickness + Nema17_with_leadscrew_height,
+      Flanged_nut_pos + Flanged_nut_height/2,0])
+    rotate([0,90,180])
+    l_module2();
 }
 XY_actuators();
 
 module top_frame(){
   translate([-Interfacing_block_width/2,
-             Nema17_cube_height,
+             0,
              -Steel_thickness-Nema17_cube_width/2-Space_besides_Nema17_interface])
     difference(){
       cube([Top_frame_width,Top_frame_height,Steel_thickness]);
@@ -737,16 +925,20 @@ module top_frame(){
 top_frame();
 
 module Z_actuator(){
-  translate([-Interfacing_block_width/2 + Top_frame_width/2,
-             -Interfacing_block_width/2+Nema17_with_leadscrew_height,
+  smooth_rod_sep = Top_frame_width-Interfacing_block_height-2*Top_frame_band_width;
+  translate([-Interfacing_block_width/2
+             +Top_frame_width/2, // End translate x
+             Top_frame_height - Interfacing_block_width/2,
              -Nema17_cube_width/2-Space_besides_Nema17_interface])
-  l_module2();
+  // Active Z actuator
+  l_module2(z=true);
   for(s=[-1,1])
-  translate([-Interfacing_block_width/2+Top_frame_width/2 + s*211/2,
-             Nema17_cube_height+Top_frame_band_height/2,
+  translate([-Interfacing_block_width/2+Top_frame_width/2
+             +s*smooth_rod_sep/2,
+             Interfacing_block_width/2,
              -Nema17_cube_width/2-Space_besides_Nema17_interface])
   rotate([0,0,90])
-  idle_smooth_rod();
+    idle_smooth_rod();
 }
 Z_actuator();
 
@@ -785,8 +977,21 @@ module idle_smooth_rod_holder(){
 //idle_smooth_rod_holder();
 
 module idle_smooth_rod(){
+  edge_to_smooth_rod = Nema17_cube_width/2+Smooth_rod_off_center;
+  height2 = 1.618*edge_to_smooth_rod;
+  stick_height = Bed_lock_height;
   smooth_rod();
   idle_smooth_rod_holder();
+  translate([0,0,Flanged_nut_pos+Interfacing_block_width/2])
+  rotate([180,0,90])
+  idle_smooth_rod_move_plate();
+  translate([height2-Plastic_thickness/2,
+             0,
+             Flanged_nut_pos
+             -Interfacing_block_width/2
+             -Bed_lock_height-3])
+    rotate([0,0,90])
+    bed_holder_interface();
 }
 //idle_smooth_rod();
 

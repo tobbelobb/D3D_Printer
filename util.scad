@@ -131,6 +131,16 @@ module Rounded_square(s, r){
   }
 }
 
+module Rounded_cube(s,r){
+  if(len(s) == undef){
+    linear_extrude(height=s)
+      Rounded_square(s,r);
+  }else{
+    linear_extrude(height=s[2])
+      Rounded_square([s[0],s[1]],r);
+  }
+}
+
 module LM8UU(){
   color("grey")
   difference(){
